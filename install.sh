@@ -5,7 +5,7 @@ if [[ $EUID -ne 0 || ! -t 0 ]]; then echo "Run interactively: sudo bash install.
 echo "J-Pod Raspberry Pi 4 installer — never formats or partitions drives."
 model=$(tr -d "\000" </proc/device-tree/model 2>/dev/null || true)
 echo "Detected: $model"
-if [[ "$model" != *"Raspberry Pi 4"* ]]; then
+if [[ "$model" != *"Raspberry Pi 4 Model B"* ]]; then
   echo "This branch targets Raspberry Pi 4 hardware."; exit 1
 fi
 if [[ "$(uname -m)" != aarch64 ]]; then
@@ -15,6 +15,10 @@ echo "SD capacity: $(lsblk -dn -o SIZE /dev/mmcblk0 2>/dev/null || echo unknown)
 lsblk -o NAME,PATH,SIZE,FSTYPE,LABEL,UUID,MOUNTPOINTS
 read -r -p "Enter SSD partition (e.g. /dev/sda1): " part
 [[ -b "$part" ]] || { echo "Invalid partition"; exit 1; }
+[[ "$(lsblk -no TYPE "$part" | head -1 | xargs)" == part ]] || { echo "Select a partition, not a whole disk"; exit 1; }
+root_disk=$(lsblk -no PKNAME "$(findmnt -n -o SOURCE /)" 2>/dev/null | head -1 | xargs)
+selected_disk=$(lsblk -no PKNAME "$part" | head -1 | xargs)
+if [[ -n "$root_disk" && "$selected_disk" == "$root_disk" ]]; then echo "Refusing to select the OS disk"; exit 1; fi
 fs=$(lsblk -no FSTYPE "$part" | head -1 | xargs)
 uuid=$(blkid -s UUID -o value "$part")
 case "$fs" in exfat|ext4|ntfs|ntfs3) ;; *) echo "Unsupported filesystem: $fs"; exit 1;; esac
@@ -48,7 +52,7 @@ mountpoint -q /srv/music || { echo "SSD not mounted"; exit 1; }
 read -r -p "Music folder on SSD [Music]: " folder
 folder=$(echo "$folder" | xargs)
 if [[ -z "$folder" ]]; then folder=Music; fi
-if [[ "$folder" == /* || "$folder" == *..* ]]; then echo "Invalid relative folder"; exit 1; fi
+if [[ "$folder" == /* || "$folder" == *..* || "$folder" == *\"* || "$folder" == *'* ]]; then echo "Invalid relative folder"; exit 1; fi
 music="/srv/music/$folder"
 if [[ ! -d "$music" ]]; then
   read -r -p "Create $music? [y/N]: " answer
