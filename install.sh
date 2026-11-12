@@ -2,7 +2,16 @@
 set -Eeuo pipefail
 trap 'echo "Installation stopped at line $LINENO" >&2' ERR
 if [[ $EUID -ne 0 || ! -t 0 ]]; then echo "Run interactively: sudo bash install.sh"; exit 1; fi
-echo "J-Pod interactive installer — never formats or partitions drives."
+echo "J-Pod Raspberry Pi 4 installer — never formats or partitions drives."
+model=$(tr -d "\000" </proc/device-tree/model 2>/dev/null || true)
+echo "Detected: $model"
+if [[ "$model" != *"Raspberry Pi 4"* ]]; then
+  echo "This branch targets Raspberry Pi 4 hardware."; exit 1
+fi
+if [[ "$(uname -m)" != aarch64 ]]; then
+  echo "Use Raspberry Pi OS 64-bit for this branch."; exit 1
+fi
+echo "SD capacity: $(lsblk -dn -o SIZE /dev/mmcblk0 2>/dev/null || echo unknown)"
 lsblk -o NAME,PATH,SIZE,FSTYPE,LABEL,UUID,MOUNTPOINTS
 read -r -p "Enter SSD partition (e.g. /dev/sda1): " part
 [[ -b "$part" ]] || { echo "Invalid partition"; exit 1; }
@@ -12,9 +21,9 @@ case "$fs" in exfat|ext4|ntfs|ntfs3) ;; *) echo "Unsupported filesystem: $fs"; e
 echo "Selected $part, $fs, UUID $uuid"
 read -r -p "Confirm this is your music SSD [type YES]: " confirm
 [[ "$confirm" == YES ]] || exit 0
-sudo apt-get update
+apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y curl jq ffmpeg ca-certificates exfatprogs git
-sudo mkdir -p /srv/music
+mkdir -p /srv/music
 if mountpoint -q /srv/music; then
   mounted_uuid=$(findmnt -n -o UUID /srv/music || true)
   [[ "$mounted_uuid" == "$uuid" ]] || { echo "Different disk already mounted at /srv/music"; exit 1; }
@@ -57,11 +66,8 @@ mkdir -p /opt/navidrome /etc/navidrome
 tar -xzf "$tmp/navidrome.tar.gz" -C /opt/navidrome
 chmod +x /opt/navidrome/navidrome
 id navidrome >/dev/null 2>&1 || useradd --system --home /var/lib/navidrome --shell /usr/sbin/nologin navidrome
+echo "The Pi 4 has ample SD space; storing Navidrome database on microSD."
 data=/var/lib/navidrome
-if [[ "$fs" == ext4 ]]; then
-  read -r -p "Store Navidrome database on SSD? [y/N]: " answer
-  if [[ "$answer" == y ]]; then data=/srv/music/.navidrome-data; fi
-fi
 mkdir -p "$data"
 chown -R navidrome:navidrome "$data"
 runuser -u navidrome -- test -r "$music" || { echo "Navidrome cannot read music directory"; exit 1; }
