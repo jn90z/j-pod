@@ -2,9 +2,31 @@
 
 A private, low-cost, always-on music server for your personal MP3/FLAC collection. Hardware: Raspberry Pi Zero 2 W, USB flash drive or powered 2.5-inch USB hard drive, 32 GB microSD, 5 V/2.5 A power supply, micro-USB OTG adapter. Software: Raspberry Pi OS Lite, Navidrome, Tailscale, Android Subsonic-compatible player.
 
-## Quick start: interactive installer
+## Recommended installation: interactive setup
 
-Once Raspberry Pi OS Lite is imaged, SSH is enabled, and your **already-formatted** SSD is connected:
+The easiest way to set up J-Pod is **headless**, using SSH from Windows PowerShell. You do **not** need a monitor, keyboard, or desktop on the Pi.
+
+### Before you begin
+
+1. Flash **Raspberry Pi OS Lite** using [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
+2. In Imager, set hostname `jpod`, a username/password, your **2.4 GHz** Wi-Fi network, and **enable SSH**.
+3. Format the **1 TB SSD as exFAT on Windows** (GPT partition table preferred), label it `JPOD_MUSIC`, and create a `Music` folder. **Back up existing files before formatting.**
+4. Connect the SSD to the Pi Zero 2 W's **USB data** port with a micro-USB OTG adapter. If the SSD is not reliably detected, use a powered USB hub. Connect the Pi power supply to **PWR IN**.
+5. Power up the Pi and wait for it to join Wi-Fi.
+
+### Connect from Windows
+
+Open PowerShell:
+
+~~~powershell
+ssh YOUR_USERNAME@jpod.local
+~~~
+
+Replace `YOUR_USERNAME` with the account created in Imager. If `jpod.local` doesn't resolve, find the Pi's IP address in your router and use `ssh YOUR_USERNAME@PI_IP`.
+
+### Install with four commands
+
+Run these **inside the Pi SSH session**, not in Windows PowerShell:
 
 ~~~bash
 sudo apt update && sudo apt install -y git
@@ -13,9 +35,43 @@ cd j-pod
 sudo bash install.sh
 ~~~
 
-The installer asks you to **select and confirm the SSD partition**, specify the music folder, and choose whether to connect Tailscale. It installs Navidrome and configures automatic startup. **It never formats or repartitions a drive.** For exFAT/NTFS it stores Navidrome's writable database on the microSD to avoid permission problems; ext4 offers an SSD database option. Keep backups of both music and the Navidrome database.
+Read [install.sh](install.sh) before running it as root. The script **never formats or repartitions a drive**, but it does change system configuration, install packages, and create a system service. It has not yet been validated on the actual Pi hardware.
 
-If the script reports an error, stop and inspect the message before rerunning. Review [install.sh](install.sh) before running it with sudo.
+### Interactive installer walkthrough
+
+The installer will:
+
+1. List attached drives. Enter the **SSD partition**, such as `/dev/sda1` (not the microSD and not necessarily `/dev/sda1` on your system).
+2. Display its filesystem and UUID. Type **YES** only after verifying the correct SSD.
+3. Mount the SSD at `/srv/music` using its UUID and configure persistent mounting in `/etc/fstab`. It backs up the existing fstab first.
+4. Ask for the folder containing your music. For the recommended Windows layout, accept **Music**, corresponding to `/srv/music/Music`.
+5. Download the matching Navidrome ARM binary, configure it, and enable automatic startup through systemd.
+6. Offer Tailscale installation and display a sign-in link for your private remote network.
+
+**Database location:** For your exFAT SSD, the script uses `/var/lib/navidrome` on the microSD for the writable Navidrome database. An ext4 drive offers an SSD database option. This is a deliberate reliability choice; back up the database separately.
+
+### After installation
+
+On your home Wi-Fi, open **http://jpod.local:4533** (or `http://PI_LAN_IP:4533`) and create a Navidrome administrator account. Check that your albums appear and play one song.
+
+Install Tailscale on your Android phone, sign in to the **same tailnet**, and enable the VPN. The Pi's private remote address is shown by `tailscale ip -4`; use `http://PI_TAILSCALE_IP:4533` as the server URL in your Navidrome/Subsonic-compatible Android player. Test playback over cellular with Wi-Fi disabled, then Bluetooth and Android Auto. **Android Auto compatibility depends on the chosen Android player.** Do not forward ports on your home router.
+
+### Verify and troubleshoot
+
+~~~bash
+lsblk -f
+findmnt /srv/music
+systemctl status navidrome --no-pager
+sudo journalctl -u navidrome -n 80 --no-pager
+tailscale status
+df -h / /srv/music
+~~~
+
+If the installer fails, read the error before rerunning. If `/srv/music` already has an fstab entry or is mounted from another drive, resolve that conflict manually rather than forcing another mount. Keep an independent backup of your music library and Navidrome database.
+
+### Manual alternative
+
+The numbered sections below document a **manual installation** for troubleshooting or advanced configuration. **Choose either the interactive installer or the manual procedure; do not perform both on the same fresh installation.**
 
 ## 1. Prepare the Pi
 
