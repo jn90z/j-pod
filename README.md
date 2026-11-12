@@ -4,12 +4,12 @@
 
 ## Raspberry Pi 4 setup (recommended)
 
-Use **Raspberry Pi OS Lite (64-bit)** on the 128 GB microSD. Raspberry Pi Imager will expand the filesystem on first boot. Set hostname `jpod`, enable SSH, and configure your user and network. For a stable always-on server, connect **Gigabit Ethernet** if possible, and plug the SSD into a **blue USB 3.0 port**. Use a suitable USB-C 5V/3A power supply. The SSD should already be formatted exFAT and contain `Music/`.
+Use **Raspberry Pi OS Lite (64-bit)** on the 128 GB microSD. Raspberry Pi Imager will expand the filesystem on first boot. Set hostname `J-Pod`, create the username `admin` with your chosen password, enable SSH, and configure your network. Never commit the password to GitHub. For a stable always-on server, connect **Gigabit Ethernet** if possible, and plug the SSD into a **blue USB 3.0 port**. Use a suitable USB-C 5V/3A power supply. The SSD should already be formatted exFAT and contain `Music/`.
 
 From Windows PowerShell, connect:
 
 ~~~powershell
-ssh YOUR_USERNAME@jpod.local
+ssh admin@J-Pod.local
 ~~~
 
 Then on the Pi:
@@ -23,7 +23,7 @@ sudo bash install.sh
 
 The Pi 4 installer checks the hardware model and 64-bit architecture, confirms your SSD before mounting, installs Navidrome, and offers Tailscale setup. It uses **/var/lib/navidrome on the 128 GB microSD** for the database, leaving the 1 TB SSD dedicated to music. The installer does not format or partition drives. **Review the script before running as root; hardware testing is pending.**
 
-Afterward visit `http://jpod.local:4533` on your LAN, create the Navidrome admin account, and test streaming over Tailscale from your phone.
+Afterward visit `http://J-Pod.local:4533` on your LAN, create the Navidrome admin account, and test streaming over Tailscale from your phone.
 
 ---
 
@@ -37,7 +37,7 @@ The easiest way to set up J-Pod is **headless**, using SSH from Windows PowerShe
 ### Before you begin
 
 1. Flash **Raspberry Pi OS Lite** using [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
-2. In Imager, set hostname `jpod`, a username/password, your **2.4 GHz** Wi-Fi network, and **enable SSH**.
+2. In Imager, set hostname `J-Pod`, a username/password, your **2.4 GHz** Wi-Fi network, and **enable SSH**.
 3. Format the **1 TB SSD as exFAT on Windows** (GPT partition table preferred), label it `JPOD_MUSIC`, and create a `Music` folder. **Back up existing files before formatting.**
 4. Connect the SSD to the Pi Zero 2 W's **USB data** port with a micro-USB OTG adapter. If the SSD is not reliably detected, use a powered USB hub. Connect the Pi power supply to **PWR IN**.
 5. Power up the Pi and wait for it to join Wi-Fi.
@@ -47,7 +47,7 @@ The easiest way to set up J-Pod is **headless**, using SSH from Windows PowerShe
 Open PowerShell:
 
 ~~~powershell
-ssh YOUR_USERNAME@jpod.local
+ssh admin@J-Pod.local
 ~~~
 
 Replace `YOUR_USERNAME` with the account created in Imager. If `jpod.local` doesn't resolve, find the Pi's IP address in your router and use `ssh YOUR_USERNAME@PI_IP`.
@@ -80,7 +80,7 @@ The installer will:
 
 ### After installation
 
-On your home Wi-Fi, open **http://jpod.local:4533** (or `http://PI_LAN_IP:4533`) and create a Navidrome administrator account. Check that your albums appear and play one song.
+On your home Wi-Fi, open **http://J-Pod.local:4533** (or `http://PI_LAN_IP:4533`) and create a Navidrome administrator account. Check that your albums appear and play one song.
 
 Install Tailscale on your Android phone, sign in to the **same tailnet**, and enable the VPN. The Pi's private remote address is shown by `tailscale ip -4`; use `http://PI_TAILSCALE_IP:4533` as the server URL in your Navidrome/Subsonic-compatible Android player. Test playback over cellular with Wi-Fi disabled, then Bluetooth and Android Auto. **Android Auto compatibility depends on the chosen Android player.** Do not forward ports on your home router.
 
@@ -103,10 +103,10 @@ The numbered sections below document a **manual installation** for troubleshooti
 
 ## 1. Prepare the Pi
 
-Use [Raspberry Pi Imager](https://www.raspberrypi.com/software/) on Windows. Choose Pi Zero 2 W and Raspberry Pi OS Lite (64-bit, or 32-bit if preferred). Configure hostname **jpod**, your own username and password, 2.4 GHz Wi-Fi, country and **enable SSH** before writing the card. Boot the Pi, then connect using PowerShell:
+Use [Raspberry Pi Imager](https://www.raspberrypi.com/software/) on Windows. Choose Pi Zero 2 W and Raspberry Pi OS Lite (64-bit, or 32-bit if preferred). Configure hostname **J-Pod**, your own username and password, 2.4 GHz Wi-Fi, country and **enable SSH** before writing the card. Boot the Pi, then connect using PowerShell:
 
 ~~~powershell
-ssh YOUR_USER@jpod.local
+ssh admin@J-Pod.local
 ~~~
 
 If mDNS fails, get the Pi IP from your router and SSH to that address. Keep SSH off the public internet.
@@ -220,7 +220,7 @@ sudo systemctl enable --now navidrome
 systemctl status navidrome --no-pager
 ~~~
 
-The mount dependency prevents a scan against a missing drive. On your home network visit **http://jpod.local:4533** (or the Pi LAN IP). Create a strong Navidrome admin account, wait for scanning, and play a track.
+The mount dependency prevents a scan against a missing drive. On your home network visit **http://J-Pod.local:4533** (or the Pi LAN IP). Create a strong Navidrome admin account, wait for scanning, and play a track.
 
 ## 5. Enable remote streaming securely with Tailscale
 
