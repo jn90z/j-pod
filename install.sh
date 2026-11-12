@@ -15,6 +15,10 @@ read -r -p "Confirm this is your music SSD [type YES]: " confirm
 sudo apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y curl jq ffmpeg ca-certificates exfatprogs git
 sudo mkdir -p /srv/music
+if mountpoint -q /srv/music; then
+  mounted_uuid=$(findmnt -n -o UUID /srv/music || true)
+  [[ "$mounted_uuid" == "$uuid" ]] || { echo "Different disk already mounted at /srv/music"; exit 1; }
+fi
 if ! mountpoint -q /srv/music; then
   if grep -Eq '^[^#].*[[:space:]]/srv/music[[:space:]]' /etc/fstab; then
     echo "Existing /srv/music fstab entry; mount/check it manually"; exit 1
@@ -53,8 +57,11 @@ mkdir -p /opt/navidrome /etc/navidrome
 tar -xzf "$tmp/navidrome.tar.gz" -C /opt/navidrome
 chmod +x /opt/navidrome/navidrome
 id navidrome >/dev/null 2>&1 || useradd --system --home /var/lib/navidrome --shell /usr/sbin/nologin navidrome
-read -r -p "Store Navidrome database on SSD? [Y/n]: " answer
-if [[ "$answer" == n ]]; then data=/var/lib/navidrome; else data=/srv/music/.navidrome-data; fi
+data=/var/lib/navidrome
+if [[ "$fs" == ext4 ]]; then
+  read -r -p "Store Navidrome database on SSD? [y/N]: " answer
+  if [[ "$answer" == y ]]; then data=/srv/music/.navidrome-data; fi
+fi
 mkdir -p "$data"
 chown -R navidrome:navidrome "$data"
 runuser -u navidrome -- test -r "$music" || { echo "Navidrome cannot read music directory"; exit 1; }
