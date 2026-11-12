@@ -2,6 +2,21 @@
 
 A private, low-cost, always-on music server for your personal MP3/FLAC collection. Hardware: Raspberry Pi Zero 2 W, USB flash drive or powered 2.5-inch USB hard drive, 32 GB microSD, 5 V/2.5 A power supply, micro-USB OTG adapter. Software: Raspberry Pi OS Lite, Navidrome, Tailscale, Android Subsonic-compatible player.
 
+## Quick start: interactive installer
+
+Once Raspberry Pi OS Lite is imaged, SSH is enabled, and your **already-formatted** SSD is connected:
+
+~~~bash
+sudo apt update && sudo apt install -y git
+git clone https://github.com/jn90z/j-pod.git
+cd j-pod
+sudo bash install.sh
+~~~
+
+The installer asks you to **select and confirm the SSD partition**, specify the music folder, and choose whether to connect Tailscale. It installs Navidrome and configures automatic startup. **It never formats or repartitions a drive.** For exFAT/NTFS it stores Navidrome's writable database on the microSD to avoid permission problems; ext4 offers an SSD database option. Keep backups of both music and the Navidrome database.
+
+If the script reports an error, stop and inspect the message before rerunning. Review [install.sh](install.sh) before running it with sudo.
+
 ## 1. Prepare the Pi
 
 Use [Raspberry Pi Imager](https://www.raspberrypi.com/software/) on Windows. Choose Pi Zero 2 W and Raspberry Pi OS Lite (64-bit, or 32-bit if preferred). Configure hostname **jpod**, your own username and password, 2.4 GHz Wi-Fi, country and **enable SSH** before writing the card. Boot the Pi, then connect using PowerShell:
