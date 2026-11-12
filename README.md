@@ -1,6 +1,34 @@
 # J-Pod — Raspberry Pi Music Streaming Setup
 
-A private, low-cost, always-on music server for your personal MP3/FLAC collection. Hardware: Raspberry Pi Zero 2 W, USB flash drive or powered 2.5-inch USB hard drive, 32 GB microSD, 5 V/2.5 A power supply, micro-USB OTG adapter. Software: Raspberry Pi OS Lite, Navidrome, Tailscale, Android Subsonic-compatible player.
+> **Raspberry Pi 4 branch:** This version is optimized for a Raspberry Pi 4 with a **128 GB microSD** and **1 TB exFAT USB SSD**. The original Pi Zero 2 W instructions remain on [main](https://github.com/jn90z/j-pod/tree/main).
+
+## Raspberry Pi 4 setup (recommended)
+
+Use **Raspberry Pi OS Lite (64-bit)** on the 128 GB microSD. Raspberry Pi Imager will expand the filesystem on first boot. Set hostname `jpod`, enable SSH, and configure your user and network. For a stable always-on server, connect **Gigabit Ethernet** if possible, and plug the SSD into a **blue USB 3.0 port**. Use a suitable USB-C 5V/3A power supply. The SSD should already be formatted exFAT and contain `Music/`.
+
+From Windows PowerShell, connect:
+
+~~~powershell
+ssh YOUR_USERNAME@jpod.local
+~~~
+
+Then on the Pi:
+
+~~~bash
+sudo apt update && sudo apt install -y git
+git clone --branch raspberry-pi-4 https://github.com/jn90z/j-pod.git
+cd j-pod
+sudo bash install.sh
+~~~
+
+The Pi 4 installer checks the hardware model and 64-bit architecture, confirms your SSD before mounting, installs Navidrome, and offers Tailscale setup. It uses **/var/lib/navidrome on the 128 GB microSD** for the database, leaving the 1 TB SSD dedicated to music. The installer does not format or partition drives. **Review the script before running as root; hardware testing is pending.**
+
+Afterward visit `http://jpod.local:4533` on your LAN, create the Navidrome admin account, and test streaming over Tailscale from your phone.
+
+---
+
+
+A private, always-on music server for MP3/FLAC collections. This branch targets Raspberry Pi 4, 128 GB microSD, 1 TB USB SSD, Raspberry Pi OS Lite 64-bit, Navidrome and Tailscale.
 
 ## Recommended installation: interactive setup
 
