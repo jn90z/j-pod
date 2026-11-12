@@ -52,7 +52,7 @@ mountpoint -q /srv/music || { echo "SSD not mounted"; exit 1; }
 read -r -p "Music folder on SSD [Music]: " folder
 folder=$(echo "$folder" | xargs)
 if [[ -z "$folder" ]]; then folder=Music; fi
-if [[ "$folder" == /* || "$folder" == *..* || "$folder" == *\"* || "$folder" == *'* ]]; then echo "Invalid relative folder"; exit 1; fi
+if [[ "$folder" == /* || "$folder" == *..* ]]; then echo "Invalid relative folder"; exit 1; fi
 music="/srv/music/$folder"
 if [[ ! -d "$music" ]]; then
   read -r -p "Create $music? [y/N]: " answer
