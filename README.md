@@ -1,6 +1,6 @@
 # J-Pod — Self-hosted music streaming on Raspberry Pi 4
 
-Run your own music server with **Raspberry Pi OS Lite 64-bit + Navidrome + Tailscale + Tempo (Android)**. Stream over Wi-Fi or cellular without forwarding router ports. The Pi Zero 2 W version lives on [main](https://github.com/jn90z/j-pod/tree/main).
+Run your own music server with **Raspberry Pi OS Lite 64-bit + Navidrome + Tailscale + Tempo (Android)**. Stream over Wi-Fi or cellular without forwarding router ports. The Raspberry Pi 4 version is maintained on the default `main` branch.
 
 ## Hardware and layout
 
@@ -25,7 +25,7 @@ ssh admin@J-Pod.local
 
 ```bash
 sudo apt update && sudo apt install -y git
-git clone --branch raspberry-pi-4 https://github.com/jn90z/j-pod.git
+git clone https://github.com/jn90z/j-pod.git
 cd j-pod
 sudo bash install.sh
 ```
@@ -114,7 +114,8 @@ If Navidrome is stopped after boot, first check that the USB drive is connected 
 
 ```bash
 cd ~/j-pod/j-pod   # adjust if cloned elsewhere
-git pull origin raspberry-pi-4
+git switch main
+git pull --ff-only origin main
 sudo install -m 755 backup.sh /usr/local/sbin/jpod-backup
 ```
 
