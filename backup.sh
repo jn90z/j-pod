@@ -40,8 +40,7 @@ echo "Backup: $archive (verified)"
 
 # Rotate only successfully created full backups with exact expected filenames.
 # Preserve older manually created backups and any other files in the directory.
-mapfile -d '' backups < <(find "$dest" -maxdepth 1 -type f -regextype posix-extended \\
-  -regex '.*/jpod-full-[0-9]{8}-[0-9]{6}\\.tar\\.gz' -print0 | sort -zr)
+mapfile -d '' backups < <(find "$dest" -maxdepth 1 -type f -regextype posix-extended -regex '.*/jpod-full-[0-9]{8}-[0-9]{6}[.]tar[.]gz' -print0 | sort -zr)
 if (( ${#backups[@]} > keep )); then
   for old in "${backups[@]:keep}"; do
     echo "Rotating out: $old"
