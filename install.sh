@@ -13,7 +13,7 @@ if [[ "$(uname -m)" != aarch64 ]]; then
 fi
 echo "SD capacity: $(lsblk -dn -o SIZE /dev/mmcblk0 2>/dev/null || echo unknown)"
 lsblk -o NAME,PATH,SIZE,FSTYPE,LABEL,UUID,MOUNTPOINTS
-read -r -p "Enter SSD partition (e.g. /dev/sda1): " part
+read -r -p "Enter USB music partition (e.g. /dev/sda1): " part
 [[ -b "$part" ]] || { echo "Invalid partition"; exit 1; }
 [[ "$(lsblk -no TYPE "$part" | head -1 | xargs)" == part ]] || { echo "Select a partition, not a whole disk"; exit 1; }
 root_disk=$(lsblk -no PKNAME "$(findmnt -n -o SOURCE /)" 2>/dev/null | head -1 | xargs)
@@ -23,7 +23,7 @@ fs=$(lsblk -no FSTYPE "$part" | head -1 | xargs)
 uuid=$(blkid -s UUID -o value "$part")
 case "$fs" in exfat|ext4|ntfs|ntfs3) ;; *) echo "Unsupported filesystem: $fs"; exit 1;; esac
 echo "Selected $part, $fs, UUID $uuid"
-read -r -p "Confirm this is your music SSD [type YES]: " confirm
+read -r -p "Confirm this is your music USB drive [type YES]: " confirm
 [[ "$confirm" == YES ]] || exit 0
 apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y curl jq ffmpeg ca-certificates exfatprogs git
@@ -48,8 +48,8 @@ if ! mountpoint -q /srv/music; then
   systemctl daemon-reload
   mount /srv/music
 fi
-mountpoint -q /srv/music || { echo "SSD not mounted"; exit 1; }
-read -r -p "Music folder on SSD [Music]: " folder
+mountpoint -q /srv/music || { echo "USB drive not mounted"; exit 1; }
+read -r -p "Music folder on USB drive [Music]: " folder
 folder=$(echo "$folder" | xargs)
 if [[ -z "$folder" ]]; then folder=Music; fi
 if [[ "$folder" == /* || "$folder" == *..* ]]; then echo "Invalid relative folder"; exit 1; fi
@@ -116,5 +116,17 @@ if [[ "$answer" != n ]]; then
   systemctl enable --now tailscaled
   tailscale up
   echo "Remote URL: http://$(tailscale ip -4 | head -1):4533"
+fi
+# Optional weekly backups; archives remain local until copied off-device.
+if [[ -f "$(dirname "$0")/backup.sh" && -f "$(dirname "$0")/systemd/jpod-backup.timer" ]]; then
+  read -r -p "Enable weekly local configuration backups? [Y/n]: " enable_backup
+  if [[ "$enable_backup" != n ]]; then
+    install -m 755 "$(dirname "$0")/backup.sh" /usr/local/sbin/jpod-backup
+    install -m 644 "$(dirname "$0")/systemd/jpod-backup.service" /etc/systemd/system/jpod-backup.service
+    install -m 644 "$(dirname "$0")/systemd/jpod-backup.timer" /etc/systemd/system/jpod-backup.timer
+    systemctl daemon-reload
+    systemctl enable --now jpod-backup.timer
+    echo "Weekly backups enabled. See BACKUP.md for off-device copies and recovery."
+  fi
 fi
 echo "J-Pod installed. Open http://jpod.local:4533 on home Wi-Fi to create your admin account."
