@@ -1,0 +1,11 @@
+# Sensitive backups, databases, secrets
+*.tar.gz
+*.tar.gz.sha256
+*.db
+*.db-shm
+*.db-wal
+*.key
+*.pem
+*.secret
+.env
+backups/
