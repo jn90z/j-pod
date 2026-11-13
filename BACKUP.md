@@ -35,3 +35,11 @@ sudo systemctl enable --now jpod-backup.timer
 systemctl list-timers jpod-backup.timer
 ```
 Weekly backup is stored on the microSD; copy backups off-device regularly. This timer does not automatically send archives to Windows. For daily Navidrome DB backups, use Navidrome's native `[Backup]` configuration and a directory writable by `navidrome`. See https://navidrome.org/docs/usage/backup/.
+
+## Automatic retention and verification
+
+Every completed full backup is verified with `tar -tzf` before rotation. The backup script retains the **four newest** archives named `jpod-full-YYYYMMDD-HHMMSS.tar.gz` and removes their matching SHA-256 files when rotating. Older manually created backups with different names are untouched. Failed backups do not trigger rotation.
+
+To change the retention count for a manual run, use `sudo env JPOD_KEEP=6 /usr/local/sbin/jpod-backup`. To change scheduled retention, add an `Environment=JPOD_KEEP=6` override to the systemd service.
+
+**Important:** Retention is based on completed archive names, not available space; it does not back up files to Windows automatically. Keep an encrypted off-device copy. After pulling GitHub changes, reinstall the script using `sudo install -m 755 backup.sh /usr/local/sbin/jpod-backup`.
